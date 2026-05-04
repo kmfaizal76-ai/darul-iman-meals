@@ -127,9 +127,10 @@
     }
 
     // --- API BACKEND CONNECTION ---
-    const API_URL = "YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE"; // <--- PASTE SCRIPT URL HERE
+    const API_URL = "https://script.google.com/macros/s/AKfycbxk8pR2OSgwF7bSv1P07rT4mapdfg50w7kTmyvkVpABF49DG_jLVWt0JHxDkPf4oyw5/exec";
 
     async function callBackend(action, payload = {}) {
+      // ... rest of the code remains exactly the same ...
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
