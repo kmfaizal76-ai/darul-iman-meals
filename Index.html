@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darul Iman Meals</title>
+  
+  <!-- PWA Manifest & Theme setup -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2E7D32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; }
+    .header { text-align: center; color: #2E7D32; padding: 10px 0; }
+    .nav { display: flex; justify-content: space-around; background: white; border-radius: 8px; padding: 10px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 5px;}
+    .nav-btn { background: none; border: none; font-size: 14px; font-weight: bold; color: #555; cursor: pointer; padding: 8px; flex-grow: 1;}
+    .nav-btn.active { color: #2E7D32; border-bottom: 2px solid #2E7D32; }
+    .view-section { display: none; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+    .view-section.active { display: block; }
+    .login-container { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #c5e1a5; }
+    select, input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+    .btn-submit { background-color: #2E7D32; color: white; border: none; font-weight: bold; cursor: pointer; }
+    .btn-meal { color: white; border: none; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+    #btn-breakfast { background-color: #FF9800; } #btn-lunch { background-color: #4CAF50; } #btn-dinner { background-color: #2196F3; }
+    .confirmation-box { background: #e8f5e9; padding: 10px; border-radius: 6px; margin-top: 15px; border-left: 4px solid #4CAF50; font-size: 14px;}
+    .dash-card { background: #f9f9f9; padding: 15px; margin-bottom: 10px; border-radius: 8px; text-align: center; border: 1px solid #ddd;}
+    .dash-card h3 { margin: 0; color: #333; font-size: 24px; }
+    .dash-card p { margin: 5px 0 0 0; color: #666; font-size: 14px; text-transform: uppercase;}
+    .record-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px;}
+    .rec-box { background: #f1f8e9; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #c5e1a5;}
+    .rec-total { font-size: 20px; font-weight: bold; color: #33691E;}
+    .history-list { font-size: 14px; color: #444; max-height: 200px; overflow-y: auto; padding-right: 5px;}
+    .history-item { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;}
+    .footer { text-align: center; padding: 20px 10px 10px 10px; margin-top: 20px; font-size: 12px; color: #777; border-top: 1px solid #ddd;}
+    .footer a { color: #2E7D32; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2 style="margin-bottom: 5px;">Darul Iman Meals</h2>
+    <p style="margin-top: 0; font-size: 14px; color: #555;" id="live-clock">Loading time...</p>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchView('book-view', this)">Book</button>
+    <button class="nav-btn" onclick="switchView('record-view', this)">My Record</button>
+    <button class="nav-btn" onclick="switchView('visitor-view', this)">Visitors</button>
+    <button class="nav-btn" onclick="switchView('dash-view', this)">Dashboard</button>
+  </div>
+
+  <!-- VIEW 1: Book -->
+  <div id="book-view" class="view-section active">
+    <div class="login-container">
+      <label style="font-weight:bold; color:#2E7D32; font-size:14px;">Logged in as:</label>
+      <select id="userSelect" onchange="userChanged()" style="margin-top:5px; margin-bottom:0;"><option value="" disabled selected>Loading Names...</option></select>
+    </div>
+
+    <div style="background: #fff3e0; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; border: 1px solid #ffe0b2;">
+      <h4 style="margin: 0 0 5px 0; color: #e65100;">Today's Menu</h4>
+      <div><strong>Breakfast:</strong> <span id="menu-bfast">Loading...</span></div>
+      <div><strong>Lunch:</strong> <span id="menu-lunch">Loading...</span></div>
+      <div><strong>Dinner:</strong> <span id="menu-dinner">Loading...</span></div>
+    </div>
+    <button class="btn-meal" id="btn-breakfast" onclick="bookMeal('Breakfast')">Book Breakfast</button>
+    <button class="btn-meal" id="btn-lunch" onclick="bookMeal('Lunch')">Book Lunch</button>
+    <button class="btn-meal" id="btn-dinner" onclick="bookMeal('Dinner')">Book Dinner</button>
+    <div id="book-status" style="font-weight:bold; text-align:center; margin-top:10px;"></div>
+    <div id="my-confirmations" class="confirmation-box" style="display:none;">
+      <strong>My Confirmed Meals (Today):</strong><br><span id="my-meals-list"></span>
+    </div>
+  </div>
+
+  <!-- VIEW 2: Record -->
+  <div id="record-view" class="view-section">
+    <div id="user-display-name" style="text-align:center; font-weight:bold; color:#2E7D32; margin-bottom:10px;">Showing records for: [Select Name]</div>
+    <h3 style="margin-top:0; color:#333; text-align:center;">This Month's Summary</h3>
+    <div class="record-grid">
+      <div class="rec-box"><div style="font-size:12px;">Breakfasts</div><div class="rec-total" id="my-tot-bfast">-</div></div>
+      <div class="rec-box"><div style="font-size:12px;">Lunches</div><div class="rec-total" id="my-tot-lunch">-</div></div>
+      <div class="rec-box"><div style="font-size:12px;">Dinners</div><div class="rec-total" id="my-tot-dinner">-</div></div>
+    </div>
+    <div style="text-align:center; font-size:18px; font-weight:bold; color:#2E7D32; margin-bottom:15px; padding-bottom:10px; border-bottom:2px solid #eee;">
+      Total Meals This Month: <span id="my-tot-all">0</span>
+    </div>
+    <h4 style="margin:0 0 10px 0; color:#555;">Recent Bookings Log</h4>
+    <div class="history-list" id="my-history-list">
+      <div style="text-align:center; color:#888;">Go to "Book" tab to select your name first.</div>
+    </div>
+  </div>
+
+  <!-- VIEW 3: Visitor -->
+  <div id="visitor-view" class="view-section">
+    <h3 style="margin-top:0;">Visitor Request</h3>
+    <p style="font-size:13px; color:#666; margin-top:0;">Requesting as: <strong id="visitor-acting-name">None</strong></p>
+    <label>Visitor Description:</label>
+    <input type="text" id="visDesc" placeholder="e.g., Auditors, Technicians">
+    <label>Headcount:</label>
+    <input type="number" id="visCount" min="1" value="1">
+    <label>Meal Type:</label>
+    <select id="visMeal">
+      <option value="Breakfast">Breakfast</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option>
+    </select>
+    <button class="btn-submit" onclick="submitVisitorRequest()">Submit Visitor Meals</button>
+    <div id="vis-status" style="font-weight:bold; text-align:center; margin-top:10px;"></div>
+  </div>
+
+  <!-- VIEW 4: Dashboard -->
+  <div id="dash-view" class="view-section">
+    <h3 style="text-align:center; margin-top:0;">Today's Kitchen Totals</h3>
+    <div style="text-align:center; margin-bottom:15px;">
+      <button onclick="loadDashboard()" style="padding:6px; width:auto; background:#f4f7f6; border:1px solid #ccc; color:#333;">🔄 Refresh Data</button>
+    </div>
+    <div class="dash-card"><h3 id="dash-bfast-total">...</h3><p>Total Breakfasts</p></div>
+    <div class="dash-card"><h3 id="dash-lunch-total">...</h3><p>Total Lunches</p></div>
+    <div class="dash-card"><h3 id="dash-dinner-total">...</h3><p>Total Dinners</p></div>
+  </div>
+
+  <div class="footer">Darul Iman Meals System | <a href="admin.html">Admin Portal</a></div>
+
+  <script>
+    // --- PWA SERVICE WORKER REGISTRATION ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
+    }
+
+    // --- API BACKEND CONNECTION ---
+    const API_URL = "YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE"; // <--- PASTE SCRIPT URL HERE
+
+    async function callBackend(action, payload = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: action, payload: payload }),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' } // Text/plain bypasses CORS block
+        });
+        const json = await response.json();
+        if (json.status === 'success') return json.data;
+        throw new Error(json.message);
+      } catch (err) {
+        console.error(err); alert("Network Error. Ensure you have internet access."); return null;
+      }
+    }
+
+    // --- APP LOGIC ---
+    setInterval(function() {
+      const now = new Date();
+      document.getElementById('live-clock').innerText = now.toLocaleDateString() + " | " + now.toLocaleTimeString();
+    }, 1000);
+
+    window.onload = async function() {
+      // Fetch names & menu concurrently on load
+      const names = await callBackend('getUsers');
+      if (names) {
+        let options = '<option value="" disabled selected>Choose your name...</option>';
+        names.forEach(n => options += `<option value="${n}">${n}</option>`);
+        document.getElementById('userSelect').innerHTML = options;
+      }
+      
+      const menu = await callBackend('getTodayMenu');
+      if (menu) {
+        document.getElementById('menu-bfast').innerText = menu.Breakfast;
+        document.getElementById('menu-lunch').innerText = menu.Lunch;
+        document.getElementById('menu-dinner').innerText = menu.Dinner;
+      }
+    };
+
+    function switchView(viewId, btnElement) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+      btnElement.classList.add('active');
+      if (viewId === 'dash-view') loadDashboard();
+      if (viewId === 'record-view') loadMyMonthlyRecord();
+    }
+
+    function userChanged() {
+      const userName = document.getElementById('userSelect').value;
+      document.getElementById('user-display-name').innerText = "Showing records for: " + userName;
+      document.getElementById('visitor-acting-name').innerText = userName;
+      loadMyBookings(); loadMyMonthlyRecord();
+    }
+
+    async function bookMeal(mealType) {
+      const userName = document.getElementById('userSelect').value;
+      const statusDiv = document.getElementById('book-status');
+      if (!userName) return statusDiv.innerText = "Please select your name first!";
+      statusDiv.innerText = "Booking..."; statusDiv.style.color = '#333';
+      
+      const res = await callBackend('submitBooking', { userName, mealType });
+      if (res) {
+        statusDiv.style.color = res.includes("already booked") ? 'orange' : 'green';
+        statusDiv.innerText = res; 
+        loadMyBookings(); loadMyMonthlyRecord();
+      }
+    }
+
+    async function loadMyBookings() {
+      const userName = document.getElementById('userSelect').value;
+      if(!userName) return;
+      const meals = await callBackend('getMyTodayBookings', { userName });
+      if(meals) {
+        const confirmBox = document.getElementById('my-confirmations'), list = document.getElementById('my-meals-list');
+        if(meals.length > 0) { confirmBox.style.display = 'block'; list.innerHTML = "✅ " + meals.join("<br>✅ "); } 
+        else { confirmBox.style.display = 'none'; }
+      }
+    }
+
+    async function loadMyMonthlyRecord() {
+      const userName = document.getElementById('userSelect').value;
+      if(!userName) return;
+      const data = await callBackend('getMyMonthlySummary', { userName });
+      if(data) {
+        document.getElementById('my-tot-bfast').innerText = data.totals.Breakfast;
+        document.getElementById('my-tot-lunch').innerText = data.totals.Lunch;
+        document.getElementById('my-tot-dinner').innerText = data.totals.Dinner;
+        document.getElementById('my-tot-all').innerText = data.totals.Total;
+        const historyDiv = document.getElementById('my-history-list'); historyDiv.innerHTML = '';
+        if(data.history.length === 0) historyDiv.innerHTML = '<div style="text-align:center; color:#888;">No meals booked yet this month.</div>';
+        else data.history.forEach(log => { historyDiv.innerHTML += `<div class="history-item"><span>📅 ${log.date}</span><strong>${log.meal}</strong></div>`; });
+      }
+    }
+
+    async function submitVisitorRequest() {
+      const user = document.getElementById('userSelect').value, desc = document.getElementById('visDesc').value, count = document.getElementById('visCount').value, meal = document.getElementById('visMeal').value, status = document.getElementById('vis-status');
+      if(!user) return status.innerText = "Please select your name in the 'Book' tab first!";
+      if(!desc || !count) return status.innerText = "Fill all fields!";
+      status.innerText = "Submitting...";
+      
+      const res = await callBackend('submitVisitor', { requestedBy: user, description: desc, count: count, mealType: meal });
+      if(res) {
+        status.innerText = res; status.style.color = 'green';
+        document.getElementById('visDesc').value = ""; document.getElementById('visCount').value = "1";
+      }
+    }
+
+    async function loadDashboard() {
+      const stats = await callBackend('getDashboardStats');
+      if(stats) {
+        document.getElementById('dash-bfast-total').innerText = stats.Breakfast.total;
+        document.getElementById('dash-lunch-total').innerText = stats.Lunch.total;
+        document.getElementById('dash-dinner-total').innerText = stats.Dinner.total;
+      }
+    }
+  </script>
+</body>
+</html>

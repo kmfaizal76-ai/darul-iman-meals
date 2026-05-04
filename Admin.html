@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darul Iman Admin</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background-color: #ECEFF1; margin: 0; padding: 15px; }
+    .header { text-align: center; color: #1565C0; margin-bottom: 15px; }
+    .nav { display: flex; justify-content: space-around; background: white; border-radius: 8px; padding: 10px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 5px; }
+    .nav-btn { background: none; border: none; font-size: 14px; font-weight: bold; color: #555; cursor: pointer; padding: 8px; flex-grow: 1; }
+    .nav-btn.active { color: #1565C0; border-bottom: 2px solid #1565C0; }
+    .view-section { display: none; } .view-section.active { display: block; }
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 650px; margin: 0 auto 20px auto; }
+    h3 { margin-top: 0; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    label { display: block; margin-top: 10px; font-size: 14px; color: #555; font-weight: bold; }
+    input { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
+    .btn { width: 100%; padding: 12px; margin-top: 15px; border-radius: 6px; border: none; color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
+    .btn-blue { background-color: #1565C0; } .btn-green { background-color: #2E7D32; }
+    .status { margin-top: 10px; text-align: center; font-weight: bold; min-height: 20px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    .stat-box { background: #f8f9fa; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #ddd; }
+    .stat-box h4 { margin: 0 0 5px 0; font-size: 14px; }
+    .stat-box .total { font-size: 20px; font-weight: bold; color: #1565C0; }
+    .stat-box .split { font-size: 12px; color: #666; margin-top: 5px; }
+    .menu-box { background: #E3F2FD; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; border: 1px solid #BBDEFB; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background-color: #f1f1f1; color: #333; position: sticky; top: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2 style="margin-bottom: 5px;">Darul Iman Meals Admin</h2>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchAdminView('dash-view', this)">Dashboard</button>
+    <button class="nav-btn" onclick="switchAdminView('menu-view', this)">Set Menu</button>
+    <button class="nav-btn" onclick="switchAdminView('staff-view', this)">Add Staff</button>
+    <button class="nav-btn" onclick="switchAdminView('directory-view', this)">Directory</button>
+    <button class="nav-btn" onclick="window.location.href='index.html'">Exit</button>
+  </div>
+
+  <!-- VIEW 1: Dashboard -->
+  <div id="dash-view" class="view-section active card">
+    <h3>Live Overview <button onclick="loadAdminDashboard()" style="float:right; padding:4px 8px; font-size:12px; cursor:pointer;">🔄 Refresh</button></h3>
+    <div class="menu-box">
+      <strong>Today's Menu:</strong><br>
+      🍳 Bfast: <span id="ad-menu-bfast">...</span> | 🍛 Lunch: <span id="ad-menu-lunch">...</span> | 🍲 Dinner: <span id="ad-menu-dinner">...</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box" style="border-top: 3px solid #FF9800;">
+        <h4>Breakfast</h4><div class="total" id="ad-stat-bfast-tot">...</div><div class="split">S: <span id="ad-stat-bfast-s">0</span> | V: <span id="ad-stat-bfast-v">0</span></div>
+      </div>
+      <div class="stat-box" style="border-top: 3px solid #4CAF50;">
+        <h4>Lunch</h4><div class="total" id="ad-stat-lunch-tot">...</div><div class="split">S: <span id="ad-stat-lunch-s">0</span> | V: <span id="ad-stat-lunch-v">0</span></div>
+      </div>
+      <div class="stat-box" style="border-top: 3px solid #2196F3;">
+        <h4>Dinner</h4><div class="total" id="ad-stat-dinner-tot">...</div><div class="split">S: <span id="ad-stat-dinner-s">0</span> | V: <span id="ad-stat-dinner-v">0</span></div>
+      </div>
+    </div>
+    <h4 style="margin-bottom: 5px; color: #333;">Today's Log</h4>
+    <div style="max-height: 250px; overflow-y: auto;">
+      <table><thead><tr><th>Time</th><th>Name</th><th>Meal</th></tr></thead><tbody id="bookings-table-body"><tr><td colspan="3" style="text-align:center;">Loading data...</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <!-- VIEW 2: Set Menu -->
+  <div id="menu-view" class="view-section card" style="max-width: 400px;">
+    <h3>Set Daily Menu</h3>
+    <label>Date (Defaults to Today):</label> <input type="date" id="menuDate">
+    <label>Breakfast Menu:</label> <input type="text" id="menuBfast" placeholder="e.g., Bread & Egg Aanam">
+    <label>Lunch Menu:</label> <input type="text" id="menuLunch" placeholder="e.g., Chicken Briyani">
+    <label>Dinner Menu:</label> <input type="text" id="menuDinner" placeholder="e.g., Idiyappam">
+    <button class="btn btn-blue" onclick="saveMenu()">Update Menu</button>
+    <div id="status-menu" class="status"></div>
+  </div>
+
+  <!-- VIEW 3: Add Staff -->
+  <div id="staff-view" class="view-section card" style="max-width: 400px;">
+    <h3>Register New Staff</h3>
+    <label>Employee ID:</label> <input type="text" id="staffId">
+    <label>Full Name:</label> <input type="text" id="staffName">
+    <label>Contact / Email:</label> <input type="text" id="staffEmail">
+    <label>Department:</label> <input type="text" id="staffDept">
+    <button class="btn btn-green" onclick="saveStaff()">Register Staff</button>
+    <div id="status-staff" class="status"></div>
+  </div>
+
+  <!-- VIEW 4: Directory -->
+  <div id="directory-view" class="view-section card">
+    <h3>Staff Directory <button onclick="loadDirectory()" style="float:right; padding:4px 8px; font-size:12px; cursor:pointer;">🔄 Refresh</button></h3>
+    <div id="edit-staff-section" style="display:none; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px;">
+      <h4 style="margin-top:0; color:#1565C0;">Edit Staff Details</h4>
+      <label>Employee ID:</label><input type="text" id="editId" disabled style="background:#e0e0e0;">
+      <label>Full Name:</label><input type="text" id="editName">
+      <label>Contact / Email:</label><input type="text" id="editEmail">
+      <label>Department:</label><input type="text" id="editDept">
+      <div style="display:flex; gap:10px; margin-top:15px;">
+        <button class="btn btn-blue" style="margin-top:0;" onclick="submitStaffUpdate()">Save</button>
+        <button class="btn" style="margin-top:0; background:#d32f2f; color:white;" onclick="deleteStaffRecord()">Delete</button>
+        <button class="btn" style="margin-top:0; background:#999; color:white;" onclick="cancelEdit()">Cancel</button>
+      </div>
+      <div id="status-edit" class="status"></div>
+    </div>
+    <div style="max-height: 400px; overflow-y: auto;">
+      <table><thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Action</th></tr></thead><tbody id="directory-table-body"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE"; 
+
+    async function callBackend(action, payload = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST', body: JSON.stringify({ action: action, payload: payload }),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
+        });
+        const json = await response.json();
+        if (json.status === 'success') return json.data;
+        throw new Error(json.message);
+      } catch (err) { alert("Network Error"); return null; }
+    }
+
+    window.onload = function() {
+      document.getElementById('menuDate').value = new Date().toISOString().split('T')[0];
+      loadAdminDashboard();
+    };
+
+    function switchAdminView(viewId, btnElement) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+      btnElement.classList.add('active');
+      if(viewId === 'dash-view') loadAdminDashboard();
+      if(viewId === 'directory-view') loadDirectory();
+    }
+
+    async function loadAdminDashboard() {
+      document.getElementById('bookings-table-body').innerHTML = '<tr><td colspan="3" style="text-align:center;">Refreshing...</td></tr>';
+      const data = await callBackend('getAdminDashboardData');
+      if(data) {
+        document.getElementById('ad-menu-bfast').innerText = data.menu.Breakfast;
+        document.getElementById('ad-menu-lunch').innerText = data.menu.Lunch;
+        document.getElementById('ad-menu-dinner').innerText = data.menu.Dinner;
+        const m = ['bfast', 'lunch', 'dinner'], mKey = ['Breakfast', 'Lunch', 'Dinner'];
+        for(let i=0; i<3; i++) {
+          document.getElementById(`ad-stat-${m[i]}-tot`).innerText = data.stats[mKey[i]].total;
+          document.getElementById(`ad-stat-${m[i]}-s`).innerText = data.stats[mKey[i]].staff;
+          document.getElementById(`ad-stat-${m[i]}-v`).innerText = data.stats[mKey[i]].visitor;
+        }
+        const tbody = document.getElementById('bookings-table-body'); tbody.innerHTML = ''; 
+        if(data.bookings.length === 0) tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#888;">No bookings yet today.</td></tr>';
+        else data.bookings.forEach(b => { tbody.innerHTML += `<tr><td>${b.time}</td><td><strong>${b.name}</strong></td><td>${b.meal}</td></tr>`; });
+      }
+    }
+
+    async function loadDirectory() {
+      const tbody = document.getElementById('directory-table-body');
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Fetching staff list...</td></tr>';
+      cancelEdit(); 
+      const staffList = await callBackend('getAllStaff');
+      if(staffList) {
+        tbody.innerHTML = '';
+        if(staffList.length === 0) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">No staff found.</td></tr>';
+        else staffList.forEach(s => {
+          let safeName = s.name.replace(/'/g, "\\'"); let safeEmail = s.email.replace(/'/g, "\\'"); let safeDept = s.dept.replace(/'/g, "\\'");
+          let editBtn = `<button onclick="openEditForm('${s.id}', '${safeName}', '${safeEmail}', '${safeDept}')" style="background:#FF9800; color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">Edit</button>`;
+          tbody.innerHTML += `<tr><td>${s.id}</td><td><strong>${s.name}</strong></td><td>${s.dept}</td><td>${editBtn}</td></tr>`;
+        });
+      }
+    }
+
+    function openEditForm(id, name, email, dept) {
+      document.getElementById('edit-staff-section').style.display = 'block';
+      document.getElementById('editId').value = id; document.getElementById('editName').value = name;
+      document.getElementById('editEmail').value = email; document.getElementById('editDept').value = dept;
+      document.getElementById('edit-staff-section').scrollIntoView({behavior: "smooth"});
+    }
+
+    function cancelEdit() { document.getElementById('edit-staff-section').style.display = 'none'; document.getElementById('status-edit').innerText = ''; }
+
+    async function submitStaffUpdate() {
+      const id = document.getElementById('editId').value, name = document.getElementById('editName').value, email = document.getElementById('editEmail').value, dept = document.getElementById('editDept').value, status = document.getElementById('status-edit');
+      if(!name || !dept) return status.innerText = "Name and Dept required!";
+      status.innerText = "Updating..."; status.style.color = '#333';
+      const res = await callBackend('updateStaff', {id, name, email, dept});
+      if(res) { status.innerText = res; status.style.color = 'green'; setTimeout(() => { loadDirectory(); }, 2000); }
+    }
+
+    async function deleteStaffRecord() {
+      const id = document.getElementById('editId').value, name = document.getElementById('editName').value, status = document.getElementById('status-edit');
+      if(!confirm(`Delete ${name}?`)) return;
+      status.innerText = "Deleting..."; status.style.color = 'red';
+      const res = await callBackend('deleteStaff', {id});
+      if(res) { status.innerText = res; status.style.color = 'green'; setTimeout(() => { loadDirectory(); }, 2000); }
+    }
+
+    async function saveMenu() {
+      const date = document.getElementById('menuDate').value, bfast = document.getElementById('menuBfast').value, lunch = document.getElementById('menuLunch').value, dinner = document.getElementById('menuDinner').value, status = document.getElementById('status-menu');
+      if(!date || !bfast || !lunch || !dinner) return status.innerText = "Fill all items!";
+      status.innerText = "Saving..."; status.style.color = '#333';
+      const res = await callBackend('updateDailyMenu', {date, bfast, lunch, dinner});
+      if(res) { status.innerText = res; status.style.color = 'green'; setTimeout(() => { status.innerText = ""; loadAdminDashboard(); }, 3000); }
+    }
+
+    async function saveStaff() {
+      const id = document.getElementById('staffId').value, name = document.getElementById('staffName').value, email = document.getElementById('staffEmail').value, dept = document.getElementById('staffDept').value, status = document.getElementById('status-staff');
+      if(!id || !name || !dept) return status.innerText = "ID, Name, and Dept required!";
+      status.innerText = "Saving..."; status.style.color = '#333';
+      const res = await callBackend('addEmployee', {id, name, email, dept});
+      if(res) {
+        status.innerText = res; status.style.color = 'green';
+        document.getElementById('staffId').value = ""; document.getElementById('staffName').value = ""; document.getElementById('staffEmail').value = ""; document.getElementById('staffDept').value = "";
+        setTimeout(() => status.innerText = "", 3000);
+      }
+    }
+  </script>
+</body>
+</html>
